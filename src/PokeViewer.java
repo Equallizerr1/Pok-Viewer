@@ -1,11 +1,15 @@
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import java.net.URL;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpClient;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -21,7 +25,7 @@ public class PokeViewer implements  ActionListener{
     Font myFont = new Font("Arial", Font.BOLD, 30);
 
     String searchTerm;
-    HashMap<String, String> pokemonData = new HashMap<String, String>();
+    static HashMap<String, String> pokemonData = new HashMap<String, String>();
 
     PokeViewer () {
         MyCanvas m = new MyCanvas();
@@ -51,8 +55,13 @@ public class PokeViewer implements  ActionListener{
         frame.setVisible(true);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        String imageUrl = pokemonData.get("sprite");
+        String destinationFile = "image.png";
+
+        saveImage(imageUrl, destinationFile);
         PokeViewer poke = new PokeViewer();
+
     }
     public Object getPokemon(String searchTerm) {
 
@@ -75,10 +84,26 @@ public class PokeViewer implements  ActionListener{
         return pokemonData;
     }
 
-    public class MyCanvas extends Canvas {
+    public static void saveImage(String imageUrl, String destinationFile) throws  IOException{
+        URL url = new URL(imageUrl);
+        InputStream is = url.openStream();
+        OutputStream os = new FileOutputStream(destinationFile);
+
+        byte[] b = new byte[2048];
+        int length;
+
+        while ((length = is.read(b)) != -1) {
+            os.write(b,0,length);
+        }
+
+        is.close();
+        os.close();
+    }
+
+    public static class MyCanvas extends Canvas {
         public void paint(Graphics g) {
             Toolkit t = Toolkit.getDefaultToolkit();
-            Image i = t.getImage(pokemonData.get("Sprites"));
+            Image i = t.getImage();
             g.drawImage(i, 120,100,this);
         }
     }
