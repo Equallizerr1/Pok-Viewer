@@ -13,41 +13,51 @@ import javax.swing.JFrame;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class PokeViewer implements  ActionListener{
     JFrame frame;
     JTextField textField;
+    JTextField resultField;
     JButton searchButton;
     JPanel panel;
 
     Font myFont = new Font("Arial", Font.BOLD, 30);
 
-    String searchTerm;
+    int searchTerm;
     List<String> pokemon;
-
+    List<String> pokemonNames = new ArrayList<>();
     PokeViewer () {
         getPokemon();
         frame = new JFrame("PokéViewer");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600, 600);
         frame.setLayout(null);
+        frame.setResizable(false);
 
         textField = new JTextField();
-        textField.setBounds(100,25,300,50);
+        textField.setBounds(100,500,300,50);
         textField.setEditable(true);
         textField.setFont(myFont);
 
+        resultField = new JTextField();
+        resultField.setBounds(150,25,300,50);
+        resultField.setEditable(false);
+        resultField.setFont(myFont);
+        resultField.setFocusable(false);
+
         searchButton = new JButton("Search");
-        searchButton.setBounds(400,25,100,50);
+        searchButton.setBounds(400,500,100,50);
         searchButton.addActionListener(this);
 
         panel = new JPanel();
-        panel.setBounds(100, 100,400,400);
+        panel.setBounds(100, 85,400,400);
         panel.setBackground(Color.lightGray);
 
         frame.add(panel);
         frame.add(searchButton);
         frame.add(textField);
+        frame.add(resultField);
         frame.setVisible(true);
     }
 
@@ -79,9 +89,16 @@ public class PokeViewer implements  ActionListener{
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == searchButton) {
-        searchTerm = textField.getText();
-
-            System.out.println(pokemon.get(1));
+        searchTerm = Integer.parseInt(textField.getText());
+        Object[] pokemonArray = pokemon.toArray();
+            for (int i = 0; i < pokemonArray.length; i++) {
+                pokemonNames.add(pokemonArray[i].toString().substring(8, pokemonArray[i].toString().length()-1));
+                i++;
+            }
+            if (Objects.equals(pokemonNames.getFirst(), "bulbasaur")) {
+                pokemonNames.addFirst("No Pokémon Found");
+            }
+            resultField.setText(pokemonNames.get(searchTerm));
         }
     }
 }
