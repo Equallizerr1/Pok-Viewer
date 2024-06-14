@@ -103,7 +103,7 @@ public class PokeViewer implements  ActionListener{
     public static class MyCanvas extends Canvas {
         public void paint(Graphics g) {
             Toolkit t = Toolkit.getDefaultToolkit();
-            Image i = t.getImage();
+            Image i = t.getImage("image");
             g.drawImage(i, 120,100,this);
         }
     }
