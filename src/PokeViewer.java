@@ -10,7 +10,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.JFrame;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class PokeViewer implements  ActionListener{
     JFrame frame;
@@ -21,10 +23,10 @@ public class PokeViewer implements  ActionListener{
     Font myFont = new Font("Arial", Font.BOLD, 30);
 
     String searchTerm;
-    static HashMap<String, String> pokemonData = new HashMap<String, String>();
+    List<String> pokemon;
 
     PokeViewer () {
-
+        getPokemon();
         frame = new JFrame("PokéViewer");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600, 600);
@@ -52,10 +54,10 @@ public class PokeViewer implements  ActionListener{
     public static void main(String[] args) throws IOException {
         PokeViewer poke = new PokeViewer();
     }
-    public void getPokemon(String searchTerm) {
+    public void getPokemon() {
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://pokeapi.co/api/v2/pokemon/"+searchTerm))
+                .uri(URI.create("https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0"))
                 .method("GET", HttpRequest.BodyPublishers.noBody())
                 .build();
         HttpResponse<String> response = null;
@@ -67,18 +69,19 @@ public class PokeViewer implements  ActionListener{
         }
         assert response != null;
         JsonObject pokemonObject = new Gson().fromJson(response.body(), JsonObject.class);
-        //System.out.println(pokemonObject.getAsJsonObject().get("sprites").getAsJsonObject().get("front_default"));
-        pokemonData.put("Name", String.valueOf(pokemonObject.get("name")));
-        pokemonData.put("Sprite", String.valueOf(pokemonObject.getAsJsonObject().get("sprites").getAsJsonObject().get("front_default")));
+        String myStr = String.valueOf(pokemonObject.get("results"));;
+        String regex = "[\\[{},\\]\\s]";
+        List<String> list = new ArrayList<>(Arrays.asList(myStr.split(regex)));
+        list.removeAll(Arrays.asList("", null));
+        pokemon = list;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == searchButton) {
         searchTerm = textField.getText();
-        getPokemon(searchTerm);
 
-        //System.out.println(pokemonData.get("Sprite"));
+            System.out.println(pokemon.get(1));
         }
     }
 }
