@@ -37,6 +37,7 @@ public class PokeViewer implements ActionListener {
     public void main() {
         SwingUtilities.invokeLater(this::apiGUI);
     }
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void purgeDirectory(File dir) {
         // Purges assets folder
         for (File file: Objects.requireNonNull(dir.listFiles())) {
@@ -85,6 +86,7 @@ public class PokeViewer implements ActionListener {
     }
 
     public static void saveImage(String imageUrl, String destinationFile) throws IOException {
+        //noinspection deprecation
         URL url = new URL(imageUrl);
         InputStream is = url.openStream();
         OutputStream os = new FileOutputStream(destinationFile);
@@ -112,7 +114,8 @@ public class PokeViewer implements ActionListener {
         }
         if (e.getSource() == searchImagesButton) {
             searchTerm = searchField.getText();
-            fileName = "assets//"+searchTerm+".png";
+            //noinspection preview
+            fileName = STR."assets//\{searchTerm}.png";
             file = new File(fileName);
             try {
                 img = ImageIO.read(file);
@@ -133,10 +136,13 @@ class APICalls {
 
     public static void getPokemonImages(File file, JsonArray dexEntries) {
         // Takes nationalDexEntries and downloads Pokémon sprites from "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"+i+".png"
+        //noinspection ResultOfMethodCallIgnored
         file.mkdir();
         int i = 1;
         while (i <= dexEntries.size()) {
+            //noinspection preview
             String imageUrl = STR."https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/\{i}.png";
+            //noinspection preview
             String destinationFile =
                     STR."Assets\\\{dexEntries.get(i - 1).getAsJsonObject().get("pokemon_species").getAsJsonObject().get(
                             "name").toString().replaceAll("\"", "")}.png";
