@@ -73,6 +73,7 @@ public class PokeViewer implements ActionListener {
         frame.setSize(600, 600);
         lbl = new JLabel();
         frame.add(lbl);
+        frame.setTitle("PokéViewer");
         frame.setVisible(true);
 
         frame.add(dexButton);
@@ -91,7 +92,7 @@ public class PokeViewer implements ActionListener {
         InputStream is = url.openStream();
         OutputStream os = new FileOutputStream(destinationFile);
 
-        byte[] b = new byte[2048];
+        byte[] b = new byte[8192];
         int length;
 
         while ((length = is.read(b)) != -1) {
