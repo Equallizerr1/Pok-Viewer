@@ -1,73 +1,161 @@
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import java.net.URI;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpClient;
-import java.io.IOException;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import javax.swing.JFrame;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.net.URI;
+import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.Objects;
 
-public class PokeViewer implements  ActionListener{
-    JFrame frame;
-    JTextField textField;
-    JTextField resultField;
-    JButton searchButton;
-    JPanel panel;
+public class PokeViewer implements ActionListener {
+    JButton dexButton, imagesButton, searchImagesButton, purgeButton;
+    JTextField searchField, resultField;
+    JLabel lbl;
+    BufferedImage img;
+    ImageIcon icon;
+    String searchTerm = "";
+    String fileName = "";
 
-    Font myFont = new Font("Arial", Font.BOLD, 30);
+    File file = new File("assets");
+    JsonArray nationalDexEntries = APICalls.GetNationalDexEntries();
+    /*
+    keySet = [entry_number, pokemon_species]
+    String pokemon_Name = nationalDexEntries.get(i).getAsJsonObject().get("pokemon_species").getAsJsonObject().get("name").toString().replaceAll("\"", "");
+     JsonElement pokemon_URL = nationalDexEntries.get(i).getAsJsonObject().get("pokemon_species").getAsJsonObject().get("url");
+     int entry_Number = nationalDexEntries.get(i).getAsJsonObject().get("entry_number").getAsInt();
+    */
 
-    int searchTerm;
-    List<String> pokemon;
-    List<String> pokemonNames = new ArrayList<>();
-    PokeViewer () {
-        getPokemon();
-        frame = new JFrame("PokéViewer");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600, 600);
-        frame.setLayout(null);
-        frame.setResizable(false);
-
-        textField = new JTextField();
-        textField.setBounds(100,500,300,50);
-        textField.setEditable(true);
-        textField.setFont(myFont);
-
+    public void main() {
+        SwingUtilities.invokeLater(this::apiGUI);
+    }
+    public void purgeDirectory(File dir) {
+        // Purges assets folder
+        for (File file: Objects.requireNonNull(dir.listFiles())) {
+            if (file.isDirectory())
+                purgeDirectory(file);
+            file.delete();
+        }
+    }
+    public void apiGUI() {
+        dexButton = new JButton("Get Dex Entries");
+        dexButton.setBounds(500,500,100,50);
+        dexButton.addActionListener(this);
+        imagesButton = new JButton("Get Images");
+        imagesButton.setBounds(300,500,100,50);
+        imagesButton.addActionListener(this);
+        searchImagesButton = new JButton("Search");
+        searchImagesButton.setBounds(100,500,100,50);
+        searchImagesButton.addActionListener(this);
+        purgeButton = new JButton("Purge");
+        purgeButton.setBounds(300,400,100,50);
+        purgeButton.addActionListener(this);
+        searchField = new JTextField();
+        searchField.setBounds(100,400,300,50);
+        searchField.setColumns(10);
+        searchField.setEditable(true);
         resultField = new JTextField();
-        resultField.setBounds(150,25,300,50);
+        resultField.setBounds(300,400,300,50);
+        resultField.setColumns(10);
         resultField.setEditable(false);
-        resultField.setFont(myFont);
-        resultField.setFocusable(false);
 
-        searchButton = new JButton("Search");
-        searchButton.setBounds(400,500,100,50);
-        searchButton.addActionListener(this);
-
-        panel = new JPanel();
-        panel.setBounds(100, 85,400,400);
-        panel.setBackground(Color.lightGray);
-
-        frame.add(panel);
-        frame.add(searchButton);
-        frame.add(textField);
-        frame.add(resultField);
+        JFrame frame = new JFrame();
+        frame.setLayout(new FlowLayout(FlowLayout.CENTER, 5,5));
+        frame.setSize(600, 600);
+        lbl = new JLabel();
+        frame.add(lbl);
         frame.setVisible(true);
+
+        frame.add(dexButton);
+        frame.add(imagesButton);
+        frame.add(purgeButton);
+        frame.add(searchImagesButton);
+        frame.add(searchField);
+        frame.add(resultField);
+
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    public static void main(String[] args) throws IOException {
-        PokeViewer poke = new PokeViewer();
+    public static void saveImage(String imageUrl, String destinationFile) throws IOException {
+        URL url = new URL(imageUrl);
+        InputStream is = url.openStream();
+        OutputStream os = new FileOutputStream(destinationFile);
+
+        byte[] b = new byte[2048];
+        int length;
+
+        while ((length = is.read(b)) != -1) {
+            os.write(b, 0, length);
+        }
+
+        is.close();
+        os.close();
     }
-    public void getPokemon() {
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == dexButton) {
+            APICalls.GetNationalDexEntries();
+            System.out.println(APICalls.GetNationalDexEntries());
+        }
+        if (e.getSource() == imagesButton) {
+            APICalls.getPokemonImages(file, nationalDexEntries);
+            //System.out.println(APICalls.getPokemonImages(file, nationalDexEntries));
+        }
+        if (e.getSource() == searchImagesButton) {
+            searchTerm = searchField.getText();
+            fileName = "assets//"+searchTerm+".png";
+            file = new File(fileName);
+            try {
+                img = ImageIO.read(file);
+                icon = new ImageIcon(img);
+                lbl.setIcon(icon);
+                resultField.setText(fileName.substring(8, fileName.length()-4));
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        if(e.getSource() == purgeButton) {
+            purgeDirectory(file);
+        }
+    }
+}
+
+class APICalls {
+
+    public static void getPokemonImages(File file, JsonArray dexEntries) {
+        // Takes nationalDexEntries and downloads Pokémon sprites from "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"+i+".png"
+        file.mkdir();
+        int i = 1;
+        while (i <= dexEntries.size()) {
+            String imageUrl = STR."https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/\{i}.png";
+            String destinationFile =
+                    STR."Assets\\\{dexEntries.get(i - 1).getAsJsonObject().get("pokemon_species").getAsJsonObject().get(
+                            "name").toString().replaceAll("\"", "")}.png";
+            try {
+                PokeViewer.saveImage(imageUrl, destinationFile);
+                i++;
+                // Possibly update progress bar here.
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        System.out.print("Done");
+    }
+
+    public static JsonArray GetNationalDexEntries() {
+        // Returns pokemon_entries array from https://pokeapi.co/api/v2/pokedex/national as JsonArray
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0"))
+                .uri(URI.create("https://pokeapi.co/api/v2/pokedex/national"))
                 .method("GET", HttpRequest.BodyPublishers.noBody())
                 .build();
         HttpResponse<String> response = null;
@@ -78,27 +166,8 @@ public class PokeViewer implements  ActionListener{
             e.printStackTrace();
         }
         assert response != null;
-        JsonObject pokemonObject = new Gson().fromJson(response.body(), JsonObject.class);
-        String myStr = String.valueOf(pokemonObject.get("results"));;
-        String regex = "[\\[{},\\]\\s]";
-        List<String> list = new ArrayList<>(Arrays.asList(myStr.split(regex)));
-        list.removeAll(Arrays.asList("", null));
-        pokemon = list;
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == searchButton) {
-        searchTerm = Integer.parseInt(textField.getText());
-        Object[] pokemonArray = pokemon.toArray();
-            for (int i = 0; i < pokemonArray.length; i++) {
-                pokemonNames.add(pokemonArray[i].toString().substring(8, pokemonArray[i].toString().length()-1));
-                i++;
-            }
-            if (Objects.equals(pokemonNames.getFirst(), "bulbasaur")) {
-                pokemonNames.addFirst("No Pokémon Found");
-            }
-            resultField.setText(pokemonNames.get(searchTerm));
-        }
+        JsonObject dexObject = new Gson().fromJson(response.body(), JsonObject.class);
+        return (JsonArray) dexObject.get("pokemon_entries");
     }
 }
+
